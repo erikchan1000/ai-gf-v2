@@ -1,4 +1,3 @@
-import { useFrame } from '@react-three/fiber';
 import { useRef, useState } from 'react';
 import { VRM, VRMHumanBoneName } from '@pixiv/three-vrm';
 
@@ -15,6 +14,7 @@ export interface VRMAnimationControls {
   startNodding: () => void;
   startTalking: () => void;
   stopAnimation: () => void;
+  update: (delta: number) => void;
 }
 
 export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimationControls] => {
@@ -27,7 +27,7 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
 
   const timeRef = useRef(0);
 
-  useFrame((_, delta) => {
+  const update = (delta: number) => {
     if (!vrm) return;
 
     timeRef.current += delta;
@@ -91,9 +91,10 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
         vrm.expressionManager.setValue('aa', talkValue);
       }
     }
-  });
+  };
 
   const controls: VRMAnimationControls = {
+    update,
     startIdle: () => {
       setAnimationState({
         isIdle: true,

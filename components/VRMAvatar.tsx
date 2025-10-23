@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useVRMAnimation, VRMAnimationControls } from '@/hooks/useVRMAnimation';
 
 interface VRMAvatarProps {
@@ -26,7 +27,7 @@ export const VRMAvatar = ({
   const [, animationControls] = useVRMAnimation(vrm);
 
   useEffect(() => {
-    const loader = new THREE.GLTFLoader();
+    const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
 
     loader.load(
@@ -68,6 +69,7 @@ export const VRMAvatar = ({
   useFrame((_, delta) => {
     if (vrm) {
       vrm.update(delta);
+      animationControls.update(delta);
     }
   });
 

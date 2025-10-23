@@ -25,7 +25,7 @@ export default function Home() {
       )}
 
       {/* 3D Scene */}
-      <Scene3D onModelLoad={handleModelLoad} />
+      <Scene3D modelPath="/models/TestModel.vrm" onModelLoad={handleModelLoad} />
 
       {/* UI Overlay */}
       <div className="absolute top-0 left-0 right-0 p-6 z-20">
@@ -34,7 +34,7 @@ export default function Home() {
             AI Girlfriend
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Place your VRoid model at <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">/public/models/avatar.vrm</code>
+            Using TestModel.vrm
           </p>
         </div>
       </div>
