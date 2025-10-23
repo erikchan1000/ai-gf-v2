@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { VRM, VRMHumanBoneName } from '@pixiv/three-vrm';
+import { useRef, useState } from "react";
+import { VRM, VRMHumanBoneName } from "@pixiv/three-vrm";
 
 export interface VRMAnimationState {
   isIdle: boolean;
@@ -17,7 +17,9 @@ export interface VRMAnimationControls {
   update: (delta: number) => void;
 }
 
-export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimationControls] => {
+export const useVRMAnimation = (
+  vrm: VRM | null,
+): [VRMAnimationState, VRMAnimationControls] => {
   const [animationState, setAnimationState] = useState<VRMAnimationState>({
     isIdle: true,
     isWaving: false,
@@ -36,7 +38,8 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
     if (animationState.isIdle) {
       const breathingSpeed = 2;
       const breathingAmount = 0.02;
-      const breathing = Math.sin(timeRef.current * breathingSpeed) * breathingAmount;
+      const breathing =
+        Math.sin(timeRef.current * breathingSpeed) * breathingAmount;
 
       const spine = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.Spine);
       if (spine) {
@@ -51,35 +54,50 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
       }
 
       // Natural arm position - bring arms down from T-pose
-      const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.LeftUpperArm);
-      const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightUpperArm);
-      const leftLowerArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.LeftLowerArm);
-      const rightLowerArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightLowerArm);
+      const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.LeftUpperArm,
+      );
+      const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.RightUpperArm,
+      );
+      const leftLowerArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.LeftLowerArm,
+      );
+      const rightLowerArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.RightLowerArm,
+      );
 
       if (leftUpperArm) {
-        leftUpperArm.rotation.z = 0.3; // Rotate inward slightly
+        leftUpperArm.rotation.z = -Math.PI / 2.5; // Bring left arm down from T-pose (60 degrees)
         leftUpperArm.rotation.x = 0.1; // Slight forward angle
       }
       if (rightUpperArm) {
-        rightUpperArm.rotation.z = -0.3; // Rotate inward slightly
+        rightUpperArm.rotation.z = Math.PI / 2.5; // Bring right arm down from T-pose (60 degrees)
         rightUpperArm.rotation.x = 0.1; // Slight forward angle
       }
       if (leftLowerArm) {
-        leftLowerArm.rotation.z = 0.2; // Slight bend at elbow
+        leftLowerArm.rotation.z = -0.1; // Slight bend at elbow
       }
       if (rightLowerArm) {
-        rightLowerArm.rotation.z = -0.2; // Slight bend at elbow
+        rightLowerArm.rotation.z = 0.1; // Slight bend at elbow
       }
     }
 
     // Waving animation
     if (animationState.isWaving) {
-      const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightUpperArm);
-      const rightLowerArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightLowerArm);
-      const rightHand = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightHand);
+      const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.RightUpperArm,
+      );
+      const rightLowerArm = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.RightLowerArm,
+      );
+      const rightHand = vrm.humanoid?.getNormalizedBoneNode(
+        VRMHumanBoneName.RightHand,
+      );
 
       if (rightUpperArm) {
-        rightUpperArm.rotation.z = -Math.PI / 2 + Math.sin(timeRef.current * 5) * 0.3;
+        rightUpperArm.rotation.z =
+          -Math.PI / 2 + Math.sin(timeRef.current * 5) * 0.3;
         rightUpperArm.rotation.x = Math.PI / 4;
       }
       if (rightLowerArm) {
@@ -109,7 +127,7 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
       // Mouth animation through blend shapes
       if (vrm.expressionManager) {
         const talkValue = Math.abs(Math.sin(timeRef.current * 8)) * 0.5;
-        vrm.expressionManager.setValue('aa', talkValue);
+        vrm.expressionManager.setValue("aa", talkValue);
       }
     }
   };
