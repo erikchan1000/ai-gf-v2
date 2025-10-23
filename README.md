@@ -277,7 +277,48 @@ const cameraPositions = {
 <PerspectiveCamera position={cameraPositions.front} />
 ```
 
-## File Reference
+## Architecture
+
+### Component Hierarchy
+
+```
+app/page.tsx (Main Entry)
+    │
+    ├── Scene3D Component
+    │   │
+    │   ├── Canvas (React Three Fiber)
+    │   │   ├── PerspectiveCamera
+    │   │   ├── Lights (ambient + directional)
+    │   │   ├── Environment
+    │   │   ├── VRMAvatar Component
+    │   │   │   ├── VRM Model Loader
+    │   │   │   ├── useVRMAnimation Hook
+    │   │   │   └── Model Scene
+    │   │   ├── Ground Plane
+    │   │   └── OrbitControls
+    │   │
+    │   └── Loading Indicator
+```
+
+### Data Flow
+
+```
+1. User visits page
+   ↓
+2. page.tsx renders Scene3D
+   ↓
+3. Scene3D sets up Canvas and renders VRMAvatar
+   ↓
+4. VRMAvatar loads .vrm file from /public/models/
+   ↓
+5. useVRMAnimation hook attaches to loaded VRM
+   ↓
+6. Animation loop runs (React Three Fiber's useFrame)
+   ↓
+7. VRM model updates and renders every frame
+```
+
+### Key Files & Responsibilities
 
 | File | Purpose | Key Functions |
 |------|---------|---------------|
@@ -286,6 +327,35 @@ const cameraPositions = {
 | `components/VRMAvatar.tsx` | VRM loader | Model loading, animation integration |
 | `hooks/useVRMAnimation.ts` | Animation system | Animation state and controls |
 | `app/globals.css` | Global styles | Tailwind + shadcn theme variables |
+
+### Animation System Architecture
+
+```
+useVRMAnimation Hook
+    │
+    ├── State: { isIdle, isWaving, isNodding, isTalking }
+    │
+    ├── Controls:
+    │   ├── startIdle()
+    │   ├── startWaving()
+    │   ├── startNodding()
+    │   ├── startTalking()
+    │   └── stopAnimation()
+    │
+    └── useFrame Loop (runs every frame)
+        ├── Check current animation state
+        ├── Calculate bone rotations
+        ├── Apply to VRM humanoid bones
+        └── Update blend shapes (expressions)
+```
+
+### VRM Bone Structure Used
+
+- **Spine** - For breathing animation
+- **Head** - For nodding and idle movement
+- **RightUpperArm** - For waving
+- **RightLowerArm** - For waving
+- **RightHand** - For waving details
 
 ## Next Steps
 
@@ -310,6 +380,135 @@ const cameraPositions = {
 - [ ] Implement lip sync from audio
 - [ ] Add particle effects and post-processing
 
+## Extension Points
+
+### Add New Animations
+
+Edit `hooks/useVRMAnimation.ts`:
+1. Add new state property to `VRMAnimationState`
+2. Add animation logic in `useFrame` hook
+3. Add control function to `VRMAnimationControls`
+4. Export updated types
+
+Example:
+```tsx
+// Add to state
+isBlinking: boolean;
+
+// Add to useFrame
+if (animationState.isBlinking) {
+  const blink = Math.abs(Math.sin(timeRef.current * 10));
+  vrm.expressionManager?.setValue('blink', blink);
+}
+
+// Add control
+startBlinking: () => {
+  setAnimationState({ ...defaultState, isBlinking: true });
+}
+```
+
+### Add UI Controls
+
+Create animation control component:
+```tsx
+// components/AnimationControls.tsx
+'use client';
+
+import { VRMAnimationControls } from '@/hooks';
+
+interface Props {
+  controls: VRMAnimationControls;
+}
+
+export function AnimationControls({ controls }: Props) {
+  return (
+    <div className="flex gap-2 p-4 bg-white/90 rounded-lg shadow-lg">
+      <button
+        onClick={controls.startWaving}
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        Wave
+      </button>
+      <button
+        onClick={controls.startNodding}
+        className="px-4 py-2 bg-green-500 text-white rounded"
+      >
+        Nod
+      </button>
+      <button
+        onClick={controls.startTalking}
+        className="px-4 py-2 bg-purple-500 text-white rounded"
+      >
+        Talk
+      </button>
+      <button
+        onClick={controls.startIdle}
+        className="px-4 py-2 bg-gray-500 text-white rounded"
+      >
+        Idle
+      </button>
+    </div>
+  );
+}
+```
+
+### Add AI Chat Integration
+
+1. Install AI SDK:
+```bash
+npm install openai
+# or
+npm install @anthropic-ai/sdk
+```
+
+2. Create chat API route:
+```tsx
+// app/api/chat/route.ts
+import { OpenAI } from 'openai';
+
+const openai = new OpenAI();
+
+export async function POST(request: Request) {
+  const { message } = await request.json();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: message }],
+  });
+
+  return Response.json({
+    reply: response.choices[0].message.content,
+  });
+}
+```
+
+3. Connect to animations:
+```tsx
+// Trigger talking animation when AI responds
+animationControls.startTalking();
+// Stop when done
+setTimeout(() => animationControls.startIdle(), 3000);
+```
+
+### Add Voice Input
+
+Use Web Speech API:
+```tsx
+const startVoiceInput = () => {
+  const recognition = new (window as any).webkitSpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = (event: any) => {
+    const transcript = event.results[0][0].transcript;
+    // Send to AI chat
+    sendMessage(transcript);
+  };
+
+  recognition.start();
+};
+```
+
 ## Resources
 
 - [Three.js Documentation](https://threejs.org/docs/)
@@ -321,8 +520,7 @@ const cameraPositions = {
 
 ## Additional Documentation
 
-- `ARCHITECTURE.md` - Detailed technical architecture and data flow
-- `EXAMPLES.md` - Code examples and usage patterns
+- `EXAMPLES.md` - Extended code examples and usage patterns
 - `public/models/README.md` - VRM model instructions
 
 ## License
