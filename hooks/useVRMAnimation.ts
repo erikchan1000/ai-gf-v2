@@ -49,6 +49,27 @@ export const useVRMAnimation = (vrm: VRM | null): [VRMAnimationState, VRMAnimati
         head.rotation.y = Math.sin(timeRef.current * 0.5) * 0.05;
         head.rotation.x = Math.sin(timeRef.current * 0.3) * 0.03;
       }
+
+      // Natural arm position - bring arms down from T-pose
+      const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.LeftUpperArm);
+      const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightUpperArm);
+      const leftLowerArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.LeftLowerArm);
+      const rightLowerArm = vrm.humanoid?.getNormalizedBoneNode(VRMHumanBoneName.RightLowerArm);
+
+      if (leftUpperArm) {
+        leftUpperArm.rotation.z = 0.3; // Rotate inward slightly
+        leftUpperArm.rotation.x = 0.1; // Slight forward angle
+      }
+      if (rightUpperArm) {
+        rightUpperArm.rotation.z = -0.3; // Rotate inward slightly
+        rightUpperArm.rotation.x = 0.1; // Slight forward angle
+      }
+      if (leftLowerArm) {
+        leftLowerArm.rotation.z = 0.2; // Slight bend at elbow
+      }
+      if (rightLowerArm) {
+        rightLowerArm.rotation.z = -0.2; // Slight bend at elbow
+      }
     }
 
     // Waving animation
